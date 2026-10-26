@@ -12,6 +12,9 @@ build/
 DerivedData/
 *.xcresult
 
+# Agent harness scratch (pi creates this in the repo root)
+.pi-tmp/
+
 # Profiling output (scripts/profile.sh writes here; traces are reproducible, not source)
 traces/
 

@@ -9,12 +9,19 @@ set -euo pipefail
 # - Fails on a toolchain below the floor; warns on optional gaps.
 #
 # Requirements:
-#   - macOS 26.2+ (Xcode 26's own minimum host), Xcode 26.0+, git
+#   - macOS 26+, Xcode 26.0+, git
 #   - Optional: xcodegen/swiftlint/swiftformat (brew bundle), muter
 #
-# Note the single floor and how it is met: the app RUNS on macOS 26+, and
-# BUILDING it needs Xcode 26, which will not run below macOS 26.2. The check
-# below is about the build host.
+# One floor, and the build host shares it: the app RUNS on macOS 26+, and it is
+# BUILT on the same generation, which is what makes the floor runtime-tested
+# rather than a compile-only deployment target. The check below is about the
+# build host.
+#
+# A given Xcode point release may demand a newer host than 26.0 — Xcode 26.4.1
+# declares 26.2 in its own Info.plist. That minimum is not duplicated here,
+# because the system enforces it: an Xcode cannot launch on a host below its own
+# LSMinimumSystemVersion, so the failure is loud. Encoding a point-release number
+# in this script only makes the script wrong at the next Xcode update.
 
 ## Help ========================================================================
 
@@ -65,12 +72,15 @@ check_optional() {
 
 echo "— doctor —"
 
-# macOS version — build-host floor, set by Xcode 26's own minimum (26.2)
+# macOS version — the build host shares the app's floor, so the gate is one
+# generation rather than two. Xcode's own higher point-release minimum is left to
+# the system; see the Requirements note above.
+MACOS_FLOOR="26.0"
 MACOS_VERSION=$(sw_vers -productVersion)
-if [ "$(printf '%s\n' "26.2" "${MACOS_VERSION}" | sort -V | head -n 1)" = "26.2" ]; then
-    echo "✓ macOS ${MACOS_VERSION} (build host)"
+if [ "$(printf '%s\n' "${MACOS_FLOOR}" "${MACOS_VERSION}" | sort -V | head -n 1)" = "${MACOS_FLOOR}" ]; then
+    echo "✓ macOS ${MACOS_VERSION} (build host, floor ${MACOS_FLOOR})"
 else
-    echo "✗ macOS ${MACOS_VERSION} — building needs 26.2+, because Xcode 26 requires it (the app itself runs on 26+)." >&2
+    echo "✗ macOS ${MACOS_VERSION} is below the ${MACOS_FLOOR} build-host floor — the app targets macOS 26." >&2
     FAILURES=$((FAILURES + 1))
 fi
 

@@ -5,8 +5,9 @@ build, plus the conventions that keep the codebase coherent.
 
 ## Requirements
 
-- macOS 26 or later, and Xcode 26 or later to build. Xcode 26 wants a host of
-  macOS 26.2 or later, so in practice that is the build floor.
+- macOS 26 or later, and Xcode 26 or later to build. A later Xcode point
+  release can demand a newer host than 26.0 — Xcode 26.4.1 wants 26.2 — so
+  install the Xcode your macOS supports; `make doctor` checks the floor.
 - Homebrew, for the build toolchain.
 
 ```sh
