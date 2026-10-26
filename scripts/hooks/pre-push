@@ -1,0 +1,5 @@
+#!/bin/sh
+# Second gate run before anything leaves the machine:
+# the same fast gate, re-proved against the pushed state.
+set -e
+exec "$(git rev-parse --show-toplevel)/scripts/verify.sh"

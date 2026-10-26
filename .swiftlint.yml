@@ -1,0 +1,33 @@
+# SwiftLint — minimal tuned config (ADR-002). Defaults stay on; we opt in only
+# to zero-noise bug-catchers. Import ordering AND comma placement belong to
+# SwiftFormat (sortImports / commas), so those lint rules stay off here.
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - first_where
+  - redundant_type_annotation
+  - toggle_bool
+
+# Generated build products are not source: linting them reports noise as
+# errors and makes the gate depend on build state.
+# `build` is the release pipeline's output (scripts/release.sh): the archive,
+# the exported .app, and the staged DMG volume. It must be excluded or the gate
+# stops working the moment a release is built — SwiftLint crashes outright on
+# the app bundle inside it.
+excluded:
+  - .build
+  - build
+  - Generated
+
+disabled_rules:
+  - trailing_comma
+
+line_length:
+  warning: 120
+  error: 200
+
+identifier_name:
+  min_length: 2
+
+type_name:
+  min_length: 2

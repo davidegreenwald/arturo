@@ -1,0 +1,104 @@
+name: Arturo
+
+options:
+  # Reverse-DNS prefix. Apple does not verify domain ownership, but this
+  # identifier is permanent: changing it after release resets UserDefaults,
+  # LaunchServices registration, and the notarization record for every
+  # existing user. Treat it as fixed from the first public build.
+  bundleIdPrefix: app.arturo
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "26.0"
+
+packages:
+  DesignSystem:
+    path: Packages/DesignSystem
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    # Local development, `make test`, and `make verify` build unsigned so no
+    # developer needs a signing identity. Distribution overrides this on the
+    # command line; see docs/distribution.md.
+    CODE_SIGNING_ALLOWED: NO
+  configs:
+    # Hardened Runtime is a notarization requirement, so it belongs on the
+    # distribution config only. Do NOT promote this to `base`: library
+    # validation rejects the ad-hoc-signed UI test bundle with "mapping process
+    # and mapped file have different Team IDs", which breaks `make test-ui`.
+    Release:
+      ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  Arturo:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - Sources
+    dependencies:
+      - package: DesignSystem
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: Arturo
+        # Without these two, XcodeGen writes a literal "1.0" / "1" into the
+        # plist and MARKETING_VERSION silently drives nothing — the built app
+        # then reports the wrong version, and the DMG name drifts from the tag
+        # and the cask URL.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.photography
+        NSHumanReadableCopyright: MIT licensed. See LICENSE.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.arturo.viewer
+        # Without this the AppIcon set is compiled but never adopted as the
+        # bundle icon, and the app shows a generic page in the Dock.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+
+  AppTests:
+    type: bundle.unit-test
+    platform: macOS
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        # XCTest/Swift Testing entry points are nonisolated; the suites that
+        # need the main actor annotate themselves.
+        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+    sources:
+      - Tests/AppTests
+    dependencies:
+      - target: Arturo
+
+  AppUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+    sources:
+      - Tests/AppUITests
+    dependencies:
+      - target: Arturo
+
+schemes:
+  Arturo:
+    build:
+      targets:
+        Arturo: all
+        AppTests: [test]
+        AppUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AppTests
+        - AppUITests

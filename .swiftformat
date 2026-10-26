@@ -1,0 +1,5 @@
+# SwiftFormat — style layer of the gate (ADR-002). Lint semantics belong to
+# SwiftLint; this file owns formatting only.
+--swift-version 6
+--indent 4
+--enable sortImports

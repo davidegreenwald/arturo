@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Runner note: this project targets macOS 26 and needs Xcode 26, which requires
+# a macOS 26.2 host. `macos-15` runners therefore cannot build it. The
+# deployment-target floor is verified at runtime here rather than only by the
+# compiler, because the runner's OS is the same generation as the floor.
+jobs:
+  verify:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Install build toolchain
+        run: brew bundle
+
+      - name: Doctor (environment check)
+        run: make doctor
+
+      - name: Verify (full gate)
+        run: make verify
+        env:
+          # Sandbox-safe temp dir, mirroring verify.sh's own redirection.
+          TMPDIR: ${{ github.workspace }}/.build/tmp

@@ -1,0 +1,5 @@
+#!/bin/sh
+# A red verify aborts the commit. Run `make verify` to reproduce it.
+# Installed per-clone via `scripts/install-hooks.sh` (core.hooksPath).
+set -e
+exec "$(git rev-parse --show-toplevel)/scripts/verify.sh"
